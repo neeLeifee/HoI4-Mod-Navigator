@@ -42,6 +42,7 @@ func installedExe() string { return filepath.Join(appDir(), "HoI4ModNavigator.ex
 func configPath() string   { return filepath.Join(appDir(), "settings.json") }
 func loadConfig() (Config, error) {
 	c := defaults()
+	c.LocalModsRoot = localModsDirectory()
 	b, e := os.ReadFile(configPath())
 	if os.IsNotExist(e) {
 		return c, nil
@@ -60,6 +61,7 @@ func loadConfig() (Config, error) {
 		c.LegacyMenu = false
 		c.MenuVersion = 20
 	}
+	c.MenuVersion = 21
 	return c, nil
 }
 func atomicBytes(p string, b []byte) error {
@@ -329,6 +331,58 @@ func runAction(action, id, p string) error {
 		}
 		// Use the same guarded implementation as the direct verbs.
 		return runAction(choices[i].action, choices[i].id, p)
+	}
+	// Auto-discovered mods are read-only sources, never write destinations.
+	if id == "local" && (action == "reverse-local" || action == "reverse-local-file" || action == "compare-local") {
+		root, err := localModRoot(c, p)
+		if err != nil {
+			return err
+		}
+		if err = rootCheck(root); err != nil {
+			return err
+		}
+		dst, err := mapped(root, c.Game, p)
+		if err != nil {
+			return err
+		}
+		if action == "compare-local" {
+			if !c.Compare {
+				return errors.New("Функция выключена")
+			}
+			if err = regular(p); err != nil {
+				return err
+			}
+			if err = regular(dst); err != nil {
+				return fmt.Errorf("Оригинал отсутствует или недоступен: %w", err)
+			}
+			code, err := vscode()
+			if err != nil {
+				return err
+			}
+			return exec.Command(code, "--new-window", "--diff", dst, p).Start()
+		}
+		if !c.Reverse {
+			return errors.New("Функция выключена")
+		}
+		if action == "reverse-local-file" {
+			if err = regular(p); err != nil {
+				return err
+			}
+			if err = regular(dst); err != nil {
+				return fmt.Errorf("В ванильной игре нет соответствующего файла: %w", err)
+			}
+			return explorer(dst, true)
+		}
+		if err = checkChain(p, false); err != nil {
+			return err
+		}
+		if err = existingDir(p); err != nil {
+			return err
+		}
+		if err = ensureDir(c.Game, dst, false); err != nil {
+			return fmt.Errorf("В оригинальной игре такой папки нет или она недоступна: %w", err)
+		}
+		return explorer(dst, false)
 	}
 	var m Mod
 	for _, x := range c.Mods {

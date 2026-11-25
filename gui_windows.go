@@ -146,7 +146,7 @@ func button(s string, id, x, y, w, h int)   { control("BUTTON", s, id, x, y, w, 
 func checkbox(s string, id, x, y, w, h int) { control("BUTTON", s, id, x, y, w, h, 0x10000|3) }
 func buildControls() {
 	styledLabel("HoI4 Mod Navigator", 24, 13, 590, 34, titleFont, 0x593722)
-	muted("v2.0  /  Настройки интеграции", 24, 49, 740, 22)
+	muted("v2.1  /  Настройки интеграции", 24, 49, 740, 22)
 	line(24, 78, 744)
 	section("01   Оригинальная игра", 24, 87, 740)
 	muted("Корневая папка, содержащая hoi4.exe", 24, 113, 740, 20)
@@ -193,6 +193,8 @@ func buildControls() {
 }
 func collect() Config {
 	c := config
+	c.LocalModsRoot = localModsDirectory()
+	c.MenuVersion = 21
 	c.Game = filepath.Clean(strings.TrimSpace(textOf(idGame)))
 	c.Open = checked(idOpen)
 	c.Copy = checked(idCopy)
@@ -395,7 +397,7 @@ func runGUI() {
 		message(0, "Не удалось прочитать настройки:\n"+e.Error()+"\nПроверь файл: "+configPath(), 0x10)
 		return
 	}
-	showWindow(appName+"  •  v2.0", 810, 750, buildControls)
+	showWindow(appName+"  •  v2.1", 810, 750, buildControls)
 }
 func showWindow(title string, width, height int, build func()) {
 	// DPI-unaware UI is automatically scaled by Windows, keeping the fixed layout usable.

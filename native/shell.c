@@ -24,6 +24,7 @@ typedef struct { U a; uint16_t b,c; uint8_t d[8]; } GUID;
 API H GetProcessHeap(void);
 API H HeapAlloc(H,U,size_t);
 API int HeapFree(H,U,H);
+API U GetFileAttributesW(const W*);
 API int CompareStringOrdinal(const W*,int,const W*,int,int);
 API int32_t RegGetValueW(H,const W*,const W*,U,U*,void*,U*);
 API int SHGetPathFromIDListEx(const void*,W*,U,U);
@@ -42,6 +43,14 @@ static const GUID classes[3]={{0x76ae4d21,0xcad1,0x4b8e,{0xa7,0x9e,0x85,0x55,0xc
 static U len(const W*s){U n=0;while(s[n])n++;return n;}
 static int same(const W*a,const W*b){return CompareStringOrdinal(a,-1,b,-1,1)==2;}
 static int within(const W*root,const W*path){U r=len(root),p=len(path);return r>=3 && p>=r && (p==r||path[r]=='\\') && CompareStringOrdinal(root,(int)r,path,(int)r,1)==2;}
+/* Direct child of Documents/.../mod must be a real directory, not a .mod file. */
+static int localwithin(const W*root,W*path,U scope){
+ U r=len(root), n=len(path);if(!within(root,path)||n<=r+1)return 0;
+ U end=r+1;while(end<n&&path[end]!='\\')end++;
+ if(scope==2&&end==n)return 0;
+ W saved=path[end];path[end]=0;U attr=GetFileAttributesW(path);path[end]=saved;
+ return attr!=0xffffffffu&&(attr&0x10u)&&!(attr&0x400u);
+}
 static int token(const W *s){U n=len(s);if(!n||n>40)return 0;for(U i=0;i<n;i++)if(!((s[i]>='a'&&s[i]<='z')||(s[i]>='0'&&s[i]<='9')||s[i]=='-'))return 0;return 1;}
 static int pathok(const W*s){U n=len(s);if(n<3||s[1]!=':'||s[2]!='\\')return 0;for(U i=0;i<n;i++)if(s[i]=='"'||s[i]=='\r'||s[i]=='\n')return 0;return 1;}
 static W* line(W**next,W*end){W*p=*next;if(p>=end)return 0;W*q=p;while(q<end&&*q!='\n'&&*q)q++;if(q>=end||*q!='\n')return 0;*q=0;*next=q+1;return p;}
@@ -65,7 +74,10 @@ static HR init(Iface*self,const void*pidl,void*data,H key){(void)key;Obj*o=self-
  U bytes=0;const W*keyname=WSTR("Software\\HoI4ModNavigator\\ShellV2");const W*val=WSTR("Menu");if(RegGetValueW(HKCU,keyname,val,2,0,0,&bytes)||bytes<4||bytes>MAXSNAP||(bytes&1))return OK;
  o->data=alloc((size_t)bytes+2);if(!o->data)return OOM;U read=bytes;if(RegGetValueW(HKCU,keyname,val,2,0,o->data,&read)||read>bytes||(read&1)||read<4)return OK;
  W*next=o->data,*end=o->data+read/2;W*ver=line(&next,end);W*exe=line(&next,end);if(!ver||!exe||!same(ver,WSTR("H4N2"))||!pathok(exe))return OK;o->exe=exe;
- while(next<end&&*next){W*scope=line(&next,end),*root=line(&next,end),*label=line(&next,end),*action=line(&next,end),*id=line(&next,end);if(!scope||!root||!label||!action||!id){o->available=0;return OK;}if(scope[0]!=(W)('0'+o->scope)||scope[1]||!within(root,o->path)||!token(action)||!token(id)||!len(label))continue;if(o->available>=MAXCOMMANDS){o->available=0;return OK;}o->entries[o->available++]=(Entry){label,action,id};}
+ int localBlocked=0;while(next<end&&*next){W*scope=line(&next,end),*root=line(&next,end),*label=line(&next,end),*action=line(&next,end),*id=line(&next,end);if(!scope||!root||!label||!action||!id){o->available=0;return OK;}if(scope[0]!=(W)('0'+o->scope)||scope[1]||!within(root,o->path)||!token(action)||!token(id))continue;
+ if(same(action,WSTR("skip-local"))){localBlocked=1;continue;}
+ if(same(id,WSTR("local"))&&(localBlocked||!localwithin(root,o->path,o->scope)))continue;
+ if(!len(label))continue;if(o->available>=MAXCOMMANDS){o->available=0;return OK;}o->entries[o->available++]=(Entry){label,action,id};}
  return OK;
 }
 static HR query(Iface*self,H menu,U at,U first,U last,U flags){Obj*o=self->owner;o->count=0;if(flags&1||last<first)return OK;for(U i=0;i<o->available && i<=last-first;i++){Entry e=o->entries[i];if(!InsertMenuW(menu,at+o->count,0x400,first+o->count,e.label))break;o->shown[o->count++]=e;}return (HR)o->count;}

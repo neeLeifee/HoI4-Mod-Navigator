@@ -19,3 +19,8 @@ Settings and installed components: `%LOCALAPPDATA%\HoI4ModNavigator\`. Game file
 5. Для отката включите совместимый режим. Для удаления используйте кнопку «Удалить интеграцию» или `remove_integration.cmd`. Настройки и файлы игры/модов при удалении интеграции сохраняются.
 
 Если меню не появилось или Explorer нестабилен — удалите интеграцию, перезапустите Проводник и используйте совместимый режим. Не отключайте SmartScreen глобально.
+
+
+### Local mods (v2.1)
+
+After applying settings and restarting Explorer, unregistered mods under Windows Documents/Paradox Interactive/Hearts of Iron IV/mod can navigate back to vanilla and compare files. Only manually configured mods can be destinations for copying or folder creation. Workshop and external paths require manual configuration.

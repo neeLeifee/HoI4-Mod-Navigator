@@ -1,7 +1,8 @@
-# HoI4 Mod Navigator 2.0 — Preview
+# HoI4 Mod Navigator 2.1 — Preview
 
 Navigate between vanilla HoI4 and your mods without rebuilding paths manually.
 
+- Automatically recognize standard local HoI4 mods for reverse navigation and comparison without registration.
 - Context-aware native Explorer menu with named mod destinations.
 - Create missing mod folders, reveal original files, copy with overwrite confirmation, compare via VS Code.
 - Up to 20 mods, modern folder selection and compatibility fallback.

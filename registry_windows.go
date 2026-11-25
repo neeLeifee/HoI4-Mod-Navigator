@@ -37,7 +37,7 @@ func setReg(path, name, value string) error {
 	return nil
 }
 
-//go:embed HoI4NavigatorShell_v20.dll
+//go:embed HoI4NavigatorShell_v21.dll
 var shellDLL []byte
 
 func installDLL() (string, error) {

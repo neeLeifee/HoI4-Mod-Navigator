@@ -16,6 +16,7 @@ H GetProcessHeap(void){return (H)1;}
 H HeapAlloc(H h,U f,size_t n){(void)h;(void)f;return calloc(1,n);}
 int HeapFree(H h,U f,H p){(void)h;(void)f;free(p);return 1;}
 static W fold(W w){return w>='A'&&w<='Z'?w+32:w;}
+U GetFileAttributesW(const W*p){return same(p,WSTR("C:\\Docs\\mod\\unknown.mod"))?0x20u:same(p,WSTR("C:\\Docs\\mod\\junction"))?0x410u:0x10u;}
 int CompareStringOrdinal(const W*a,int an,const W*b,int bn,int ignore){if(an<0)an=len(a);if(bn<0)bn=len(b);if(an!=bn)return 1;for(int i=0;i<an;i++)if((ignore?fold(a[i]):a[i])!=(ignore?fold(b[i]):b[i]))return 1;return 2;}
 int32_t RegGetValueW(H h,const W*k,const W*v,U flags,U*t,void*out,U*n){(void)h;(void)k;(void)v;(void)flags;(void)t;U need=(len(snap)+1)*2;if(!out){*n=need;return 0;}if(*n<need)return 234;memcpy(out,snap,need);*n=need;return 0;}
 int SHGetPathFromIDListEx(const void*p,W*out,U n,U flags){(void)flags;if(!p||len(p)>=n)return 0;append(out,p);return 1;}
@@ -46,5 +47,14 @@ int main(void){
  scenario(2,WSTR("C:\\Game\\a.txt"),1,WSTR("Copy FFU2"),WSTR("action copy 123 \"C:\\Game\\a.txt\""));
  selectedCount=2;scenario(2,WSTR("C:\\Game\\a.txt"),0,0,0);
  selectedCount=1;snap=WSTR("H4N2\nC:\\Nav.exe\n0\nC:\\Game\nBroken\n");scenario(0,WSTR("C:\\Game"),0,0,0);
- puts("9 mock scenarios passed");return 0;
+ snap=WSTR("H4N2\nC:\\Nav.exe\n0\nC:\\Docs\\mod\\known\nExplicit\nreverse\n123\n0\nC:\\Docs\\mod\\known\n\nskip-local\nlocal\n0\nC:\\Docs\\mod\nAuto\nreverse-local\nlocal\n1\nC:\\Docs\\mod\nAuto\nreverse-local\nlocal\n2\nC:\\Docs\\mod\nFile\nreverse-local-file\nlocal\n2\nC:\\Docs\\mod\nCompare\ncompare-local\nlocal\n");
+ scenario(0,WSTR("C:\\Docs\\mod\\new mod\\gfx"),1,WSTR("Auto"),WSTR("action reverse-local local \"C:\\Docs\\mod\\new mod\\gfx\""));
+ scenario(0,WSTR("C:\\Docs\\mod\\known\\gfx"),1,WSTR("Explicit"),WSTR("action reverse 123 \"C:\\Docs\\mod\\known\\gfx\""));
+ scenario(0,WSTR("C:\\Docs\\mod"),0,0,0);
+ scenario(0,WSTR("C:\\Docs\\mod-backup\\x"),0,0,0);
+ scenario(1,WSTR("C:\\Docs\\mod\\new mod"),1,WSTR("Auto"),WSTR("action reverse-local local \"C:\\Docs\\mod\\new mod\""));
+ scenario(2,WSTR("C:\\Docs\\mod\\new mod\\gfx\\a.dds"),2,WSTR("File"),WSTR("action reverse-local-file local \"C:\\Docs\\mod\\new mod\\gfx\\a.dds\""));
+ scenario(2,WSTR("C:\\Docs\\mod\\unknown.mod"),0,0,0);
+ scenario(0,WSTR("C:\\Docs\\mod\\junction\\gfx"),0,0,0);
+ puts("17 mock scenarios passed");return 0;
 }

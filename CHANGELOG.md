@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0-beta.1 — automatic local mod detection
+
+- Detect local HoI4 mods under the Windows Documents known folder without registering every mod.
+- Read-only reverse folder/file navigation and VS Code comparison; write destinations remain explicitly configured.
+- Keep explicit roots authoritative and reject unrelated paths.
+- Preserve the PowerShell quoting fix in CI.
+- Version the native DLL separately; restart Explorer after upgrading.
+
 ## 2.0.0-beta.1 — repository preview
 
 - Native x64 COM context-menu handler: contextual labels and no commands outside configured roots in dynamic mode.

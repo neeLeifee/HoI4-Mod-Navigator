@@ -7,7 +7,7 @@ import (
 )
 
 const shellKey = `Software\HoI4ModNavigator\ShellV2`
-const dllName = "HoI4NavigatorShell_v20.dll"
+const dllName = "HoI4NavigatorShell_v21.dll"
 
 var classIDs = []string{"{76AE4D21-CAD1-4B8E-A79E-8555CAB57101}", "{76AE4D21-CAD1-4B8E-A79E-8555CAB57102}", "{76AE4D21-CAD1-4B8E-A79E-8555CAB57103}"}
 var handlerScopes = []string{`Directory\Background`, `Directory`, `*`}
@@ -18,9 +18,34 @@ func handlerKey(i int) string {
 func classKey(i int) string { return baseKey + `CLSID\` + classIDs[i] }
 func dynamicItems(c Config, scope int) []menuItem {
 	if scope == 0 {
-		return items(c, 1)
+		scope = 1
 	}
-	return items(c, scope)
+	out := items(c, scope)
+	if c.LocalModsRoot == "" || (!c.Reverse && !c.Compare) {
+		return out
+	}
+	// Explicit roots win over the automatic fallback even if their commands are disabled.
+	for _, root := range append([]string{c.Game}, modRoots(c)...) {
+		out = append(out, menuItem{"", "skip-local", "local", []string{root}})
+	}
+	if c.Reverse {
+		if scope == 2 {
+			out = append(out, menuItem{"Показать файл в ванильной игре", "reverse-local-file", "local", []string{c.LocalModsRoot}})
+		} else {
+			out = append(out, menuItem{"Открыть соответствующую папку в ванилле", "reverse-local", "local", []string{c.LocalModsRoot}})
+		}
+	}
+	if c.Compare && scope == 2 {
+		out = append(out, menuItem{"Сравнить с оригиналом (VS Code)", "compare-local", "local", []string{c.LocalModsRoot}})
+	}
+	return out
+}
+func modRoots(c Config) []string {
+	var roots []string
+	for _, m := range c.Mods {
+		roots = append(roots, m.Path)
+	}
+	return roots
 }
 func snapshot(c Config, exe string) (string, error) {
 	var b strings.Builder

@@ -21,10 +21,11 @@ type Config struct {
 	Open, Copy, Reverse, Compare, Create, Filter bool
 	MenuVersion                                  int
 	LegacyMenu                                   bool
+	LocalModsRoot                                string `json:"-"` // Windows Documents known folder; never persisted
 }
 
 func defaults() Config {
-	return Config{Open: true, Copy: true, Reverse: true, Compare: true, Create: true, Filter: true, MenuVersion: 20}
+	return Config{Open: true, Copy: true, Reverse: true, Compare: true, Create: true, Filter: true, MenuVersion: 21}
 }
 func newID() string {
 	var b [12]byte
@@ -62,7 +63,7 @@ func validateConfig(c Config, rootCheck func(string) error) error {
 	if e := rootCheck(c.Game); e != nil {
 		return fmt.Errorf("Папка игры: %w", e)
 	}
-	if len(c.Mods) == 0 {
+	if len(c.Mods) == 0 && (c.LocalModsRoot == "" || (!c.Reverse && !c.Compare)) {
 		return errors.New("Добавь хотя бы один мод")
 	}
 	if len(c.Mods) > 20 {
@@ -161,7 +162,26 @@ func explorerCommand(exe, path string, selectFile bool) string {
 	return `"` + exe + `" ` + switches + `"` + path + `"`
 }
 
-// Resolve only against configured roots, not folder names or prefixes alone.
+// Resolve a direct child of the dedicated local HoI4 mod directory. No scanning,
+// and never guess a root from a folder such as gfx or common.
+func localModRoot(c Config, path string) (string, error) {
+	if c.LocalModsRoot == "" || inside(c.Game, path) {
+		return "", errors.New("Путь не находится в локальном моде HoI4")
+	}
+	for _, m := range c.Mods {
+		if inside(m.Path, path) {
+			return "", errors.New("Используй команду настроенного мода")
+		}
+	}
+	r, e := relative(c.LocalModsRoot, path)
+	if e != nil || r == "." {
+		return "", errors.New("Путь не находится в локальном моде HoI4")
+	}
+	first := strings.SplitN(r, string(filepath.Separator), 2)[0]
+	return filepath.Join(c.LocalModsRoot, first), nil
+}
+
+// Resolve configured roots first, then the dedicated local mod directory.
 func autoChoices(c Config, path string) []menuItem {
 	var out []menuItem
 	if inside(c.Game, path) {
@@ -177,6 +197,9 @@ func autoChoices(c Config, path string) []menuItem {
 			if inside(m.Path, path) {
 				return []menuItem{{"Ванильная игра", "reverse", m.ID, []string{m.Path}}}
 			}
+		}
+		if root, e := localModRoot(c, path); e == nil {
+			return []menuItem{{"Ванильная игра", "reverse-local", "local", []string{root}}}
 		}
 	}
 	return nil

@@ -17,3 +17,13 @@ Record Windows edition/build, architecture, date, application tag/commit, and ac
 - [ ] Verify unsigned warning and hashes; do not disable system protection.
 
 Release only after documenting which OS configurations were actually tested. If an item fails, leave release as preview/draft and report it.
+
+
+## v2.1 automatic local mod discovery
+
+- Restart Explorer after applying the new version.
+- Open an unregistered local mod under the actual Windows Documents/Paradox Interactive/Hearts of Iron IV/mod directory. Test folder background, selected folder, original file selection and VS Code comparison.
+- Verify a configured local mod shows no duplicate automatic commands; verify vanilla shows only configured destinations.
+- Create another local mod directory after applying settings and confirm that it works without reapplying.
+- Verify the parent mod container, unrelated paths and standalone .mod descriptor files do not offer dynamic reverse commands. Disable Reverse/Compare and check the corresponding automatic actions disappear.
+- Test compatibility mode background navigation and rollback.
