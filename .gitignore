@@ -1,0 +1,16 @@
+# Generated build artifacts (rebuild from source)
+/HoI4NavigatorShell_v20.dll
+/icon_windows_amd64.syso
+/dist/
+*.exe
+*.zip
+*.pdb
+*.obj
+*.test
+# Local configuration / editor files
+settings.json
+.env
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

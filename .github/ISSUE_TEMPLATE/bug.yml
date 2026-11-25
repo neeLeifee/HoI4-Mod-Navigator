@@ -1,0 +1,35 @@
+name: Bug report
+description: Report a reproducible problem in HoI4 Mod Navigator
+labels: []
+body:
+  - type: input
+    attributes:
+      label: Navigator version
+      placeholder: 2.0.0-beta.1
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Windows version / build
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Menu mode
+      options:
+        - Dynamic (DLL)
+        - Compatibility (static)
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Use test paths; remove private data and game/mod contents.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
